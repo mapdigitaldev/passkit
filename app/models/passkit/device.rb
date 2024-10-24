@@ -1,5 +1,5 @@
 module Passkit
-  class Device < ActiveRecord::Base
+  class Device < ::ApplicationRecord
     validates_uniqueness_of :identifier
 
     has_many :registrations, foreign_key: :passkit_device_id

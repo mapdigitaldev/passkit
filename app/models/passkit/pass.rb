@@ -1,5 +1,5 @@
 module Passkit
-  class Pass < ActiveRecord::Base
+  class Pass < ::ApplicationRecord
     validates_uniqueness_of :serial_number
     validates_presence_of :klass
 
