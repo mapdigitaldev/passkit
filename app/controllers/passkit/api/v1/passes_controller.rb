@@ -9,12 +9,12 @@ module Passkit
 
           if @generator && @payload[:collection_name].present?
             files = @generator.public_send(@payload[:collection_name]).collect do |collection_item|
-              Passkit::Factory.create_pass(@payload[:pass_class], collection_item)
+              fine_or_create_pass(collection_item)
             end
             file = Passkit::Generator.compress_passes_files(files)
             send_file(file, type: 'application/vnd.apple.pkpasses', disposition: 'attachment')
           else
-            file = Passkit::Factory.create_pass(@payload[:pass_class], @generator)
+            file = fine_or_create_pass(@generator)
             send_file(file, type: 'application/vnd.apple.pkpass', disposition: 'attachment')
           end
         end
@@ -62,6 +62,14 @@ module Passkit
 
           generator_class = @payload[:generator_class].constantize
           @generator = generator_class.find(@payload[:generator_id])
+        end
+
+        def fine_or_create_pass(generator)
+          serial_number = generator&.try(:id)
+          existing_pass = serial_number.present? && Passkit::Pass.find_by(serial_number: serial_number)
+          return Passkit::Factory.regenerate_pass(existing_pass) if existing_pass
+
+          Passkit::Factory.create_pass(@payload[:pass_class], generator)
         end
       end
     end

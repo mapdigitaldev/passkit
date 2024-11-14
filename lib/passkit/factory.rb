@@ -6,6 +6,11 @@ module Passkit
         pass = Passkit::Pass.create!(klass: pass_class, generator: generator)
         Passkit::Generator.new(pass).generate_and_sign
       end
+
+      def regenerate_pass(pass)
+        pass.refresh_instance
+        Passkit::Generator.new(pass).generate_and_sign
+      end
     end
   end
 end
