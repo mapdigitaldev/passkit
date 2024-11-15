@@ -68,6 +68,27 @@ Now is your turn. Before proceeding, you need to set these ENV variables:
 We have a [specific guide on how to get all these](docs/passkit_environment_variables.md), please follow it.
 You cannot start using this library without these variables set, and we cannot do the work for you.
 
+
+Alternatively, you can configure passkit with an initializer, where you can use environment variables, Rails secrets,
+or any other source for the required credentials:
+
+```ruby
+Passkit.configure do |config|
+  # Required, no defaults
+  config.apple_team_identifier = "dummy ID"
+  config.certificate_key = "dummy key"
+  config.private_p12_certificate = "path/to/file"
+  config.apple_intermediate_certificate = "path/to/file"
+  config.pass_type_identifier = "pass.com.some.id"
+
+  # Optional, defaults shown
+  config.dashboard_username = nil
+  config.dashboard_password = nil
+  config.skip_verification = false # Unless true, throws exceptions on startup when a required configuration is missing
+  config.web_service_host = "https://localhost:3000"
+  config.available_passes = { "Passkit::ExampleStoreCard" => -> {} }
+end
+
 ## Usage
 
 If you followed the installation steps and you have the ENV variables set, we can start looking at what is provided for you.
