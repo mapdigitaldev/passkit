@@ -2,7 +2,7 @@ require 'apnotic'
 
 module Passkit
   class Notification
-    def self.trigger_for_generators(generators)
+    def self.async_trigger_for_generators(generators)
       passes = Passkit::Pass.where(generator: generators)
       return {} if passes.empty?
 
@@ -23,19 +23,24 @@ module Passkit
           notification.topic = Passkit.configuration.pass_type_identifier
 
           begin
-            response = connection.push(notification)
-            responses_headers[pass_key][device_key] = response.headers
+            # prepare push
+            push = connection.prepare_push(notification)
+            push.on(:response) { |response| Rails.logger.info("triggered apple notifications: #{response.headers.inspect}") }
+            push.on(:error) { |exception| Rails.logger.error("triggered apple notifications error: #{exception}") }
+
+            # send
+            connection.push_async(push)
           rescue StandardError => e
-            responses_headers[pass_key][device_key] = { error: e.message }
+            Rails.logger.error("triggered apple notifications push failure: #{e}")
           end
         end
       end
 
+      # wait for all requests to be completed
+      connection.join(timeout: 60)
+
+      # close the connection
       connection.close
-
-      Rails.logger.info("triggered apple notifications: #{responses_headers.inspect}")
-
-      responses_headers
     end
   end
 end
