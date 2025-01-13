@@ -50,7 +50,7 @@ module Passkit
     end
 
     def copy_pass_to_tmp_location
-      FileUtils.cp_r("#{@pass.pass_path}/.", @temporary_path)
+      FileUtils.cp_r(@pass.pass_path, @temporary_path)
     end
 
     def clean_ds_store_files
