@@ -50,7 +50,7 @@ module Passkit
     end
 
     def copy_pass_to_tmp_location
-      FileUtils.cp_r(@pass.pass_path, @temporary_path)
+      FileUtils.cp_r("#{@pass.pass_path}/.", @temporary_path)
     end
 
     def clean_ds_store_files
@@ -116,8 +116,6 @@ module Passkit
     def generate_json_manifest
       manifest = {}
       Dir.glob(@temporary_path.join("**")).each do |file|
-        next if File.directory?(file)
-
         manifest[File.basename(file)] = Digest::SHA1.hexdigest(File.read(file))
       end
 
