@@ -116,6 +116,8 @@ module Passkit
     def generate_json_manifest
       manifest = {}
       Dir.glob(@temporary_path.join("**")).each do |file|
+        next if File.directory?(file)
+
         manifest[File.basename(file)] = Digest::SHA1.hexdigest(File.read(file))
       end
 
