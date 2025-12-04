@@ -21,6 +21,8 @@ module Passkit
       generate_json_manifest
       sign_manifest
       compress_pass_file
+    ensure
+      FileUtils.rm_rf(@temporary_path) if @temporary_path && File.directory?(@temporary_path)
     end
 
     def self.compress_passes_files(files)
@@ -44,9 +46,9 @@ module Passkit
 
     def create_temporary_directory
       FileUtils.mkdir_p(TMP_FOLDER) unless File.directory?(TMP_FOLDER)
-      @temporary_path = TMP_FOLDER.join(@pass.file_name.to_s)
+      @temporary_path = TMP_FOLDER.join("#{@pass.file_name}-#{SecureRandom.uuid}")
 
-      FileUtils.rm_rf(@temporary_path) if File.directory?(@temporary_path)
+      FileUtils.mkdir_p(@temporary_path)
     end
 
     def copy_pass_to_tmp_location
