@@ -35,6 +35,11 @@ module Passkit
             return
           end
 
+          unless pass.generator
+            render json: { error: "Pass generator no longer exists" }, status: :not_found
+            return
+          end
+
           pass_output_path = Passkit::Generator.new(pass).generate_and_sign
 
           response.headers["last-modified"] = pass.last_update.httpdate
