@@ -58,6 +58,11 @@ module Passkit
           if DateTime.parse(@payload[:valid_until]).past?
             head :not_found
           end
+        rescue OpenSSL::Cipher::CipherError, JSON::ParserError, EncodingError, ArgumentError => error
+          # A payload this app did not issue: truncated, extended, forged or tampered.
+          # Omits the message, which can quote decrypted bytes that are invalid UTF-8.
+          Rails.logger.warn("Passkit pass payload rejected: #{error.class} (#{params[:payload].length} characters)")
+          head :not_found
         end
 
         def set_generator
