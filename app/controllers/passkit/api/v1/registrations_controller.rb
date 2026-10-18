@@ -14,7 +14,8 @@ module Passkit
         # @return If the request is not authorized, returns HTTP status 401.
         # @return Otherwise, returns the appropriate standard HTTP status.
         def create
-          if @pass.devices.find_by(identifier: params[:device_id])
+          if (device = @pass.devices.find_by(identifier: params[:device_id]))
+            keep_push_token_current(device)
             render json: {}, status: :ok
             return
           end
@@ -48,7 +49,7 @@ module Passkit
         # @return If the request is not authorized, returns HTTP status 401.
         # @return Otherwise, returns the appropriate standard HTTP status.
         def destroy
-          registrations = @pass.registrations.where(passkit_device_id: params[:device_id])
+          registrations = @pass.registrations.where(device: Passkit::Device.where(identifier: params[:device_id]))
           registrations.delete_all
           render json: {}, status: :ok
         end
@@ -74,7 +75,16 @@ module Passkit
 
         def register_device
           device = Passkit::Device.find_or_create_by!(identifier: params[:device_id]) { |d| d.push_token = push_token }
+          keep_push_token_current(device)
           @pass.registrations.create!(device: device)
+        end
+
+        # Every registration call carries the device's current push token, and Apple can change it.
+        def keep_push_token_current(device)
+          return if push_token.blank?
+
+          Passkit::Device.where(identifier: device.identifier).where.not(push_token: push_token)
+            .update_all(push_token: push_token, updated_at: Time.current)
         end
 
         def fetch_registered_passes
@@ -99,11 +109,14 @@ module Passkit
         end
 
         def push_token
-          return unless request&.body
+          return @push_token if defined?(@push_token)
 
-          request.body.rewind
-          json_body = JSON.parse(request.body.read)
-          json_body["pushToken"]
+          @push_token = begin
+            request.body.rewind
+            JSON.parse(request.body.read)["pushToken"]
+          rescue JSON::ParserError, TypeError
+            nil
+          end
         end
       end
     end
