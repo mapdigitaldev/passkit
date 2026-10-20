@@ -33,12 +33,13 @@ class TestPassesController < ActionDispatch::IntegrationTest
     assert_equal 2, Passkit::Pass.count
     unzipped_passes = Zip::File.open_buffer(StringIO.new(response.body))
     assert_equal 2, unzipped_passes.size # the main zip file contains two passes
-    unzipped_pass =  Zip::File.open_buffer(unzipped_passes.first.zipfile)
+    unzipped_pass =  Zip::File.open_buffer(StringIO.new(unzipped_passes.first.get_input_stream.read))
     assert_includes unzipped_passes.first.name, '.pkpass'
+    assert_includes unzipped_pass.map(&:name), 'pass.json'
   end
 
   def test_show
-    _pkpass = Passkit::Factory.create_pass(Passkit::ExampleStoreCard)
+    _pkpass = Passkit::Factory.create_pass(Passkit::UserStoreCard, User.create!(name: "Ada"))
     assert_equal 1, Passkit::Pass.count
     pass = Passkit::Pass.last
     get pass_path(pass_type_id: ENV["PASSKIT_PASS_TYPE_IDENTIFIER"], serial_number: pass.serial_number)

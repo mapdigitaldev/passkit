@@ -61,8 +61,9 @@ module Passkit
       @instance = klass.constantize.new(generator)
     end
 
+    # A push touches the pass, so its own time counts as a change even when the generator's doesn't.
     def last_update
-      instance.last_update || updated_at
+      [instance.last_update, updated_at].compact.max
     end
   end
 end
