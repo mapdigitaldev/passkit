@@ -35,7 +35,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "rails", ">= 5"
   spec.add_dependency "rubyzip", "~> 2.0"
   spec.add_dependency "apnotic", "~> 1.7" # # for push notifications
-  spec.add_development_dependency "sqlite3", "~> 1.4"
+  spec.add_development_dependency "sqlite3", ">= 1.4", "< 3"
   spec.add_development_dependency "sprockets-rails", "~> 3.0"
   spec.add_development_dependency "dotenv"
   spec.add_development_dependency "capybara"
